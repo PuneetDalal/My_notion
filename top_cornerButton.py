@@ -7,8 +7,11 @@ from PyQt6.QtWidgets import (
     QSizePolicy,
     QLineEdit
 )
-from PyQt6.QtCore import Qt, QTimer, pyqtSignal
-
+from PyQt6.QtCore import (
+    Qt,
+    QTimer,
+    pyqtSignal
+)
 
 class HoverFrame(QFrame):
     # small frame that tells us when the mouse enters / leaves it
@@ -39,6 +42,8 @@ class HoverFrame(QFrame):
 
 
 class PageButton(QWidget):
+    name_changed = pyqtSignal(str)
+
     def __init__(self, name="Getting started"):
         super().__init__()
         self.name = name
@@ -48,16 +53,12 @@ class PageButton(QWidget):
         self.renaming = False
 
         # stays only as wide as its contents, never stretches
-        self.setSizePolicy(
-            QSizePolicy.Policy.Maximum,
-            QSizePolicy.Policy.Fixed
-        )
+        self.setSizePolicy(QSizePolicy.Policy.Maximum, QSizePolicy.Policy.Fixed)
 
         # shows the popup 100 ms after hovering
         self.hover_timer = QTimer(self)
         self.hover_timer.setSingleShot(True)
-        self.hover_timer.setInterval(100)
-
+        self.hover_timer.setInterval(150)
         self.hover_timer.timeout.connect(self.show_popup)
 
         # small delay before hiding, so the mouse can cross the gap
@@ -65,24 +66,18 @@ class PageButton(QWidget):
         self.hide_timer = QTimer(self)
         self.hide_timer.setSingleShot(True)
         self.hide_timer.setInterval(150)
-
         self.hide_timer.timeout.connect(self.check_popup)
 
         # layouttttttt 😢 regretting things for some reason
         layout = QHBoxLayout(self)
         layout.setContentsMargins(0, 0, 0, 0)
-        layout.setSpacing(2)
+        layout.setSpacing(1)
 
         # emoji button
 
-        self.emoji_button = QPushButton()
-        self.emoji_button.setText(self.emoji)
-
+        self.emoji_button = QPushButton(self.emoji)
         self.emoji_button.setFixedSize(32, 32)
-
-        self.emoji_button.setCursor(
-            Qt.CursorShape.PointingHandCursor
-        )
+        self.emoji_button.setCursor(Qt.CursorShape.PointingHandCursor)
 
         self.emoji_button.setStyleSheet("""
             QPushButton {
@@ -94,6 +89,7 @@ class PageButton(QWidget):
 
             QPushButton:hover {
                 background-color: #eeeeee;
+                border:1px solid #cccccc;
             }
 
             QPushButton:pressed {
@@ -101,29 +97,15 @@ class PageButton(QWidget):
             }
         """)
 
-        self.emoji_button.clicked.connect(
-            self.show_emoji_picker
-        )
+        self.emoji_button.clicked.connect(self.show_emoji_picker)
 
-        layout.addWidget(
-            self.emoji_button
-        )
+        layout.addWidget(self.emoji_button)
 
         # button jo main h
 
-        self.button = QPushButton()
-        self.button.setText(self.name)
-
-        self.button.setSizePolicy(
-            QSizePolicy.Policy.Maximum,
-            QSizePolicy.Policy.Fixed
-        )
-
-        self.button.setFixedHeight(32)
-
-        self.button.setCursor(
-            Qt.CursorShape.PointingHandCursor
-        )
+        self.button = QPushButton(self.name)
+        self.button.setFixedSize(200, 32)
+        self.button.setCursor(Qt.CursorShape.PointingHandCursor)
 
         self.button.setStyleSheet("""
             QPushButton {
@@ -137,27 +119,23 @@ class PageButton(QWidget):
 
             QPushButton:hover {
                 background-color: #eeeeee;
+                border: 2px solid #cccccc;
             }
 
             QPushButton:pressed {
-                background-color: #e2e2e2;
+                background-color: #eeeeee;
             }
         """)
 
-        layout.addWidget(
-            self.button
-        )
+        layout.addWidget(self.button)
 
-        self.button.clicked.connect(
-            self.start_rename
-        )
+        self.button.clicked.connect(self.start_rename)
 
         # rename box
-
+        #addding the live changing while typing of page name function
         self.rename_box = QLineEdit()
-        self.rename_box.setText(self.name)
-        self.rename_box.setFixedHeight(32)
-        self.rename_box.setMinimumWidth(150)
+        self.rename_box.textChanged.connect(self.name_changed)#conencted the txt to changing signal
+        self.rename_box.setFixedSize(200, 32)
 
         self.rename_box.hide()
 
@@ -171,31 +149,20 @@ class PageButton(QWidget):
             }
         """)
 
-        layout.addWidget(
-            self.rename_box
-        )
+        layout.addWidget(self.rename_box)
 
-        self.rename_box.editingFinished.connect(
-            self.finish_rename
-        )
+        self.rename_box.editingFinished.connect(self.finish_rename)
 
         # pop_up1
         # ToolTip type instead of Popup: a Popup grabs the mouse, which
         # breaks hover detection and swallows the click on the button
 
-        self.popup = HoverFrame(
-            self,
-            Qt.WindowType.ToolTip | Qt.WindowType.FramelessWindowHint
-        )
+        self.popup = HoverFrame(self, Qt.WindowType.ToolTip | Qt.WindowType.FramelessWindowHint)
 
-        self.popup.setAttribute(
-            Qt.WidgetAttribute.WA_ShowWithoutActivating
-        )
+        self.popup.setAttribute(Qt.WidgetAttribute.WA_ShowWithoutActivating)
 
         # needed so the rounded corners are actually transparent
-        self.popup.setAttribute(
-            Qt.WidgetAttribute.WA_TranslucentBackground
-        )
+        self.popup.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
 
         self.popup.setStyleSheet("""
             QFrame {
@@ -205,42 +172,26 @@ class PageButton(QWidget):
             }
         """)
 
-        # popup mouse events (connected once here)
+        # popup mouse events (connected once here)😢 regretting things for some reason
 
-        self.popup.entered.connect(
-            self.popup_enter
-        )
-
-        self.popup.left.connect(
-            self.popup_leave
-        )
+        self.popup.entered.connect(self.popup_enter)
+        self.popup.left.connect(self.popup_leave)
 
         # popup ka layouttt
 
-        popup_layout = QVBoxLayout(
-            self.popup
-        )
-
-        popup_layout.setContentsMargins(
-            6, 6, 6, 6
-        )
-
+        popup_layout = QVBoxLayout(self.popup)
+        popup_layout.setContentsMargins(6, 6, 6, 6)
         popup_layout.setSpacing(3)
 
         # popup options
 
-        option1 = QPushButton(
-            "more to be added"
-        )
-
-        option1.setCursor(
-            Qt.CursorShape.PointingHandCursor
-        )
+        option1 = QPushButton("more to be added")
+        option1.setCursor(Qt.CursorShape.PointingHandCursor)
 
         option1.setStyleSheet("""
             QPushButton {
                 background-color: transparent;
-                border: none;
+                border: 2px solid #cccccc;
                 border-radius: 5px;
                 padding: 7px 12px;
                 text-align: left;
@@ -264,33 +215,24 @@ class PageButton(QWidget):
         # - Sub-pages
         # - etc.
 
-        popup_layout.addWidget(
-            option1
-        )
-
-        self.popup.hide()
+        popup_layout.addWidget(option1)
 
         # emoji picker
 
-        self.emoji_picker = QFrame(
-            self,
-            Qt.WindowType.Popup
-        )
+        self.emoji_picker = QFrame(self, Qt.WindowType.Popup)
 
-        self.emoji_picker.setAttribute(
-            Qt.WidgetAttribute.WA_TranslucentBackground
-        )
+        self.emoji_picker.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
 
         self.emoji_picker.setStyleSheet("""
             QFrame {
                 background-color: white;
-                border: 1px solid #dddddd;
+                border: none;
                 border-radius: 8px;
             }
 
             QPushButton {
                 background-color: transparent;
-                border: none;
+                border:none ;
                 border-radius: 6px;
                 font-size: 20px;
                 padding: 5px;
@@ -298,16 +240,12 @@ class PageButton(QWidget):
 
             QPushButton:hover {
                 background-color: #eeeeee;
+                border: 1px solid #cccccc;
             }
         """)
 
-        emoji_layout = QHBoxLayout(
-            self.emoji_picker
-        )
-
-        emoji_layout.setContentsMargins(
-            6, 6, 6, 6
-        )
+        emoji_layout = QHBoxLayout(self.emoji_picker)
+        emoji_layout.setContentsMargins(6, 6, 6, 6)
 
         emojis = [
             "😀", "😂", "😍", "😎",
@@ -317,20 +255,11 @@ class PageButton(QWidget):
 
         for emoji in emojis:
 
-            emoji_button = QPushButton(
-                emoji
-            )
+            emoji_button = QPushButton(emoji)
 
-            emoji_button.clicked.connect(
-                lambda checked=False, e=emoji:
-                self.change_emoji(e)
-            )
+            emoji_button.clicked.connect(lambda checked=False, e=emoji: self.change_emoji(e))
 
-            emoji_layout.addWidget(
-                emoji_button
-            )
-
-        self.emoji_picker.hide()
+            emoji_layout.addWidget(emoji_button)
 
     # 🐁 events lol
 
@@ -389,9 +318,7 @@ class PageButton(QWidget):
 
         self.button.hide()
 
-        self.rename_box.setText(
-            self.name
-        )
+        self.rename_box.setText(self.name)
 
         self.rename_box.show()
 
@@ -412,13 +339,27 @@ class PageButton(QWidget):
         if new_name:
             self.name = new_name
 
-            self.button.setText(
-                self.name
-            )
+            self.button.setText(self.name)
+
+        # live typing may have sent a blank / half name, so send the real one
+        self.name_changed.emit(self.name)
 
         self.rename_box.hide()
 
         self.button.show()
+
+    # shared by the popup and the emoji picker
+
+    def show_below(self, window, anchor):
+
+        # puts a popup window just under the anchor widget and shows it
+        position = anchor.mapToGlobal(anchor.rect().bottomLeft())
+
+        window.adjustSize()
+
+        window.move(position.x(), position.y() + 2)
+
+        window.show()
 
     # emoji picker event
 
@@ -428,18 +369,7 @@ class PageButton(QWidget):
 
         self.popup.hide()
 
-        position = self.emoji_button.mapToGlobal(
-            self.emoji_button.rect().bottomLeft()
-        )
-
-        self.emoji_picker.adjustSize()
-
-        self.emoji_picker.move(
-            position.x(),
-            position.y() + 2
-        )
-
-        self.emoji_picker.show()
+        self.show_below(self.emoji_picker, self.emoji_button)
 
     # change emoji
 
@@ -447,9 +377,7 @@ class PageButton(QWidget):
 
         self.emoji = emoji
 
-        self.emoji_button.setText(
-            self.emoji
-        )
+        self.emoji_button.setText(self.emoji)
 
         self.emoji_picker.hide()
 
@@ -465,15 +393,4 @@ class PageButton(QWidget):
         if self.emoji_picker.isVisible() or self.popup.isVisible():
             return
 
-        self.popup.adjustSize()
-
-        position = self.mapToGlobal(
-            self.rect().bottomLeft()
-        )
-
-        self.popup.move(
-            position.x(),
-            position.y() + 2
-        )
-
-        self.popup.show()
+        self.show_below(self.popup, self)
